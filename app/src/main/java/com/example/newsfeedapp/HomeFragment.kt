@@ -41,6 +41,12 @@ class HomeFragment : Fragment() {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
 //this is just a sueless line
 //        /dfojgpdfgjdfg
+        //Recyclerview Setup//this is just a sueless line
+//        /dfojgpdfgjdfg
+        //Recyclerview Setup//this is just a sueless line
+//        /dfojgpdfgjdfg
+        //Recyclerview Setup//this is just a sueless line
+//        /dfojgpdfgjdfg
         //Recyclerview Setup
         val adapter = NewsFeedAdapter()
         val recyclerView = binding.rvArticles
