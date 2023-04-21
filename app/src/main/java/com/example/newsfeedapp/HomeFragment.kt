@@ -1,0 +1,92 @@
+package com.example.newsfeedapp
+
+import android.os.Bundle
+import android.util.Log
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.newsfeedapp.databinding.FragmentHomeBinding
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import network.APIClient
+import network.Article
+import network.ArticleResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+
+// TODO: Rename parameter arguments, choose names that match
+// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+private const val ARG_PARAM1 = "param1"
+private const val ARG_PARAM2 = "param2"
+
+/**
+ * A simple [Fragment] subclass.
+ * Use the [HomeFragment.newInstance] factory method to
+ * create an instance of this fragment.
+ */
+class HomeFragment : Fragment() {
+    private lateinit var binding: FragmentHomeBinding
+
+    private lateinit var articlesFromDb: List<Article>
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
+//this is just a sueless line
+//        /dfojgpdfgjdfg
+        //Recyclerview Setup
+        val adapter = NewsFeedAdapter()
+        val recyclerView = binding.rvArticles
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        //Retrofit related stuff
+        val client =
+            APIClient.apiService.fetchHeadlines("us", "de76ec492b8f447981701f10898d1643")
+
+        Log.d("headlines", "Before enqueue")
+        client.enqueue(object : Callback<ArticleResponse> {
+
+            override fun onResponse(
+                call: Call<ArticleResponse>,
+                response: Response<ArticleResponse>
+            ) {
+                Log.v("headlines", "onResponding")
+                if (response.isSuccessful) {
+                    Log.v("headlines", "\napi result--->"+response.body().toString())
+
+                    val apiResult = response.body()//This is the list of articles ArticleResponse
+                    val articlesFromApi = apiResult?.articles
+                    var idCounter = 0
+
+//                    articlesFromApi?.forEach{it.id = ++idCounter}
+                    Log.v("headlines", "\npost api result--->"+articlesFromApi.toString())
+                    //Loading articles to into Db
+                    GlobalScope.launch(){
+//                        ArticleDatabase.getInstance(requireContext()).ArticleDao().insert(*articlesFromApi!!.toTypedArray())
+                        ArticleDatabase.getInstance(requireContext()).ArticleDao().insertAll(articlesFromApi)
+                         articlesFromDb = ArticleDatabase.getInstance(requireContext()).ArticleDao().getAllArticles()
+                        Log.v("headlines", "Setting articles to the adpater")
+                        adapter.setArticleList(articlesFromDb!!)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ArticleResponse>, t: Throwable) {
+                Log.e("headlines", "Response thing unsuccessful")
+            }
+        })
+        Log.d("headlines", "After enqueue")
+
+        return binding.root
+
+    }
+}
+
